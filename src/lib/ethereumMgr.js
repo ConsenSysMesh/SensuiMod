@@ -30,7 +30,12 @@ https://node-postgres.com/
 */
 import networks from "./networks";
 import Web3 from "web3";
+import SolidityFunction from "web3/lib/web3/function";
+import fs from 'fs';
+import ABIJ from '../build/contracts/ComplexStorage.json';
+import _ from 'lodash';
 import Promise from "bluebird";
+//soon to be deprecated, needs to be exchanged - 6/11/2018
 import { generators, signers } from "eth-signer";
 import Transaction from "ethereumjs-tx";
 import { Wallet } from "ethers";
@@ -173,21 +178,51 @@ class EthereumMgr {
     }
   }
 
-  /*
-    What does SignTx Do?
-      creates a new transaction taking in the metaSignedTx txHex
-      sets the gasPrice and nonce for the new transaction
-      ests the gasLimit to the estimatedgas + 1000
-      creates 'rawTx' by serializing the new transaction and converting to hex strings
-      signs raw transaction with signer
-  */
+  //makes transaction body to be signed by the sensui service
+  async makeTx({ report, timestamp, latitide, longitude, blockchain }) {
+    //error checks
+    if (!report) throw "no report input";
+    if (!timestamp) throw "no timestamp input";
+    if (!latitide) throw "no latitide input";
+    if (!longitude) throw "no longitude input";
 
-  async signTx({ txHex, blockchain }) {
-    if (!txHex) throw "no txHex";
-    if (!blockchain) throw "no blockchain";
-    let tx = new Transaction(Buffer.from(txHex, "hex"));
+    console.log("Made all input checks, in EthereumMgr. makeTx");
+
+    //get ABI and parse through it
+    let ABI = JSON.parse(JSON.stringify(ABIJ));
+    console.log(ABIJ);
+    console.log("Successfully referenced ABI.");
+
+    //get function signature from smart contract method, hardcoding smart contract method name for now
+    //resource: https://bit.ly/2MTxgXy
+    //resource: https://github.com/ethereum/web3.js/blob/develop/lib/web3/function.js
+    let functionDef = new SolidityFunction('', _.find(ABI, { name: 'makeReport' }), '');
+
+    //create data payload for raw transaction
+    var payloadData = functionDef.toPayload([report, timestamp, latitide, longitude]).data;
+
+    console.log('Got the data payload ' + payloadData);
+
+
+    //make raw transaction, hard code smart contract address for now 6/23/2018
+    let txObj = {
+     to: '0x693e3857aa48BB2902FD12F724DC095622e61AfC',
+     data: payloadData,
+     value: '0x0',
+     from: '0xe2f54E82B8E413537B95e739C2e80d99dE40C67B',
+    }
+
+    console.log('\n' + "Normal Transaction Object:");
+    console.log(JSON.stringify(txObj));
+
+    let tx = new Transaction(txObj);
+    //come up with nonce, gas limit and gas price
     tx.gasPrice = await this.getGasPrice(blockchain);
+    console.log('\n' + "Tx Gas Price:");
+    console.log(tx.gasPrice);
     tx.nonce = await this.getNonce(this.signer.getAddress(), blockchain);
+    console.log('\n' + "Tx Gas Nonce:");
+    console.log(tx.nonce);
     const estimatedGas = await this.estimateGas(
       tx,
       this.signer.getAddress(),
@@ -195,9 +230,26 @@ class EthereumMgr {
     );
     // add some buffer to the limit
     tx.gasLimit = estimatedGas + 1000;
-    //console.log('limit', parseInt(tx.gasLimit.toString('hex'), 16))
+    console.log('\n' + "Tx Gas Limit:");
+    console.log(tx.gasLimit);
 
+    console.log('\n' + "Transformed Transaction Object:");
+    console.log(JSON.stringify(tx));
+
+    return tx;
+  }
+
+  async signTx({ tx, blockchain }) {
+    //make error checks
+    if (!tx) throw "no tx";
+    if (!blockchain) throw "no networkName";
+
+    console.log("Made all input checks, in EthereumMgr. signTx");
+
+    //take in raw transaction and sign it
     const rawTx = tx.serialize().toString("hex");
+    console.log('\n' + "Serialized TX: ");
+    console.log(rawTx);
     return new Promise((resolve, reject) => {
       this.signer.signRawTx(rawTx, (error, signedRawTx) => {
         if (error) {
@@ -212,41 +264,20 @@ class EthereumMgr {
     if (!signedRawTx) throw "no signedRawTx";
     if (!networkName) throw "no networkName";
 
-    console.log(signedRawTx);
+    console.log("Made all input checks, in EthereumMgr. sendRawTransaction");
+    console.log("The signed raw transaction is " + signedRawTx);
+
     if (!signedRawTx.startsWith("0x")) {
+      console.log("signedRawTx does not start with 0x");
       signedRawTx = "0x" + signedRawTx;
     }
+
+    console.log("\n" + "Getting transaction hash. Using the " + networkName + " network.");
     const txHash = await this.web3s[networkName].eth.sendRawTransactionAsync(
       signedRawTx
     );
-
-    /*
-    Transaction Creation & Signage Process:
-      Note: All of this is coordinated by the relay.js file in the handlers folder
-      Note: All functions being used are in the EthereumMgr.js file in the library folder
-      1. Get initial user input of metaSignedTx and blockchain network
-      2. Submit input into SignTx Function and get a signedRawTx via following process:
-          1. creates a new transaction taking in the metaSignedTx txHex
-          2. sets the gasPrice and nonce for the new transaction
-          3. ests the gasLimit to the estimatedgas + 1000
-          4. creates 'rawTx' by serializing the new transaction and converting to hex strings
-          5. signs raw transaction with signer and returns signedRawTx
-      3. Gets txHash from sending raw transction via sendRawTransaction, which does the following
-          1. Check if signedRawTx is legit
-          2. Using web3js to send transaction on respective blockchain using the follwoing func.
-             - eth.sendRawTransactionAsync
-          3. Returns txhash of transaction sent on blockchain
-
-    take in the signed raw transaction and convert some crucial elements in the
-    new tx object so that the call to web3js will be accepted. The end transaction has
-    the following object body:
-      tx = {
-        txObj.gasLimit,
-        txObj.gasPrice,
-        txObj.value,
-        tx.nonce,
-      }
-    */
+    console.log("txHash: " + txHash);
+    console.log("Now we are parsing the transaction to store it.");
     let txObj = Wallet.parseTransaction(signedRawTx);
     txObj.gasLimit = txObj.gasLimit.toString(16);
     txObj.gasPrice = txObj.gasPrice.toString();

@@ -5,10 +5,9 @@ const AuthMgr = require("./lib/authMgr");
 const EthereumMgr = require("./lib/ethereumMgr");
 const TxMgr = require("./lib/txMgr");
 const MetaTxMgr = require("./lib/metaTxMgr");
-
 const FundHandler = require("./handlers/fund");
-const RelayHandler = require("./handlers/relay");
-const CheckPendingHandler = require('./handlers/checkPending')
+const CheckPendingHandler = require('./handlers/checkPending');
+const MakeReportHandler = require('./handlers/makeReport');
 
 /*
 creating instantiations of the necessary elements to carry out
@@ -18,10 +17,9 @@ let authMgr = new AuthMgr();
 let ethereumMgr = new EthereumMgr();
 let txMgr = new TxMgr(ethereumMgr);
 let metaTxMgr = new MetaTxMgr(ethereumMgr);
-
 let fundHandler = new FundHandler(authMgr, txMgr, ethereumMgr);
-let relayHandler = new RelayHandler(authMgr, ethereumMgr, metaTxMgr);
-let checkPendingHandler = new CheckPendingHandler(ethereumMgr)
+let checkPendingHandler = new CheckPendingHandler(ethereumMgr);
+let makeReportHandler = new MakeReportHandler(ethereumMgr);
 
 /*
 method: fund
@@ -47,25 +45,25 @@ module.exports.fund = (event, context, callback) => {
 };
 
 /*
-method: relay
+method: makeReport
 needed parameters in url endpoint:
-- metaSignedTx
-- blockchain
+  - string report
+  - uint32 timestamp
+  - uint8 latitude
+  - uint8 longitude
 
-activates relayhandler, which takes the following inputs (which are instatited
+activates makeReportHandler, which takes the following inputs (which are instatited
 at the top of the file):
 - authMgr
 - ethereumMgr
 - metaTxMgr
 
-Purpose: this activates the handle method in handlers/relay.js, which verifies the authorization authToken,
-parses through the event body, ensures that the metatx parameter is inside the body and
-see if its valid, check for blockchain parameter to see if its valid. Then it decodes
-the metatransaction, verifies auth.sub and decodedMetaTx.claimedAddress, it signs the
-raw transaction, and then it sends the raw, signed transaction
+Purpose: this activates the handle method in handlers/makeReport.js, which verifies creates
+meta transaction, signs it, and send it to the smart contract function to be committed to the
+blockchain. The function also pays for the transaction
 */
-module.exports.relay = (event, context, callback) => {
-  preHandler(relayHandler, event, context, callback);
+module.exports.makeReport = (event, context, callback) => {
+  preHandler(makeReportHandler, event, context, callback);
 };
 
 /*

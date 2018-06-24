@@ -1,0 +1,148 @@
+[
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "report",
+				"type": "string"
+			},
+			{
+				"name": "timestamp",
+				"type": "uint32"
+			},
+			{
+				"name": "latitude",
+				"type": "uint8"
+			},
+			{
+				"name": "longitude",
+				"type": "uint8"
+			}
+		],
+		"name": "makeReport",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "_reportHash",
+				"type": "bytes32"
+			},
+			{
+				"indexed": false,
+				"name": "_reportTimestamp",
+				"type": "uint32"
+			}
+		],
+		"name": "ReportMade",
+		"type": "event"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "transferOwnership",
+		"outputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"payable": true,
+		"stateMutability": "payable",
+		"type": "fallback"
+	},
+	{
+		"inputs": [],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "getNumReports",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "numReports",
+		"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"name": "",
+				"type": "address"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "reports",
+		"outputs": [
+			{
+				"name": "reportHash",
+				"type": "bytes32"
+			},
+			{
+				"name": "reportTimestamp",
+				"type": "uint32"
+			},
+			{
+				"name": "lat",
+				"type": "uint8"
+			},
+			{
+				"name": "lng",
+				"type": "uint8"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	}
+]
