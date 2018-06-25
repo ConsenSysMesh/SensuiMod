@@ -8,9 +8,8 @@ needed parameters in url endpoint:
 
 activates makeReportHandler, which takes the following inputs (which are instatited
 at the top of the file):
-  - authMgr
+  - authMgr*
   - ethereumMgr
-  - metaTxMgr
 
 Purpose: this activates the handle method in handlers/makeReport.js, which verifies creates
 meta transaction, signs it, and send it to the smart contract function to be committed to the
@@ -76,21 +75,7 @@ class MakeReportHandler {
       return;
     }
 
-
-    //Verify auth.sub and decodedMetaTx.claimedAddress
-    /*
-    if (authToken.sub !== decodedMetaTx.claimedAddress) {
-      console.log("authToken.sub !== decodedMetaTx.claimedAddress");
-      cb({
-        code: 403,
-        message:
-          "Auth token mismatch. Does not match `claimedAddress` field in metatx"
-      });
-      return;
-    }
-    */
-
-    //gets tx made
+    //get transaction made
     console.log('Building rawtx');
     let rawTx;
     try {
@@ -100,7 +85,7 @@ class MakeReportHandler {
         latitide: body.latitude,
         longitude:body.longitude,
         blockchain: body.blockchain.toLowerCase(),
-        methodName: 'makeReport', 
+        methodName: 'makeReport',
       });
     } catch (err) {
       console.log("Error on this.ethereumMgr.makeTx");
@@ -140,22 +125,6 @@ class MakeReportHandler {
       return;
     }
 
-    //get transaction receipt
-    /*
-    try {
-      const txReceipt = await this.ethereumMgr.getTransactionReceipt(
-        txHash,
-        body.blockchain.toLowerCase(),
-      );
-      console.log("txReceipt:" + txReceipt);
-      cb(null, txReceipt);
-    } catch (err) {
-      console.log("Error on this.ethereumMgr.getTransactionReceipt");
-      console.log(err);
-      cb({ code: 500, message: err.message });
-      return;
-    }
-    */
   }
 }
 module.exports = MakeReportHandler;

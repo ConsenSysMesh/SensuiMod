@@ -73,14 +73,10 @@ class EthereumMgr {
   }
 
   setSecrets(secrets) {
-    /*
-      VERY IMPORTANT - THIS IS HOW WE SEND TX WITH SERVICE OF USER
-        1. Sets PG_URL so that we can send database queries (from our encrypted secrets)
-        2. Sets the wallet seed from our encrypted secrets (the funding wallet seed)
-        3. Uses HDPrivateKey repo to do appropiate signer activities
-    */
     this.pgUrl = secrets.PG_URL;
     this.seed = secrets.SEED;
+    this.serviceAdd = secrets.PUBLIC_KEY;
+    this.contractAdd = secrets.SMART_CONTRACT_ADDRESS;
 
     const hdPrivKey = generators.Phrase.toHDPrivateKey(this.seed);
     this.signer = new HDSigner(hdPrivKey);
@@ -145,21 +141,6 @@ class EthereumMgr {
       connectionString: this.pgUrl
     });
 
-    /*
-      Resource Used: AWS RDS - PostgreSQL
-      Resource Link: https://aws.amazon.com/rds/postgresql/getting-started/
-      Need help with PostgreSQL? http://www.postgresqltutorial.com/
-      database scheme:
-        table name: nonces
-          columns: Address | Network | Nonce
-          $1 = 'address' input that was inserted in the getNonce function
-          $2 = 'networkName' input that was inserted in the getNonce function
-
-      What does this query statement do?
-      It attempts to insert the nonce of each transaction in the nonce table,
-      and, if there is a conflict as to the nonce being entered, then it updates
-      (https://www.postgresql.org/docs/9.5/static/sql-insert.html#SQL-ON-CONFLICT)
-    */
     try {
       await client.connect();
       const res = await client.query(
@@ -215,10 +196,7 @@ class EthereumMgr {
       value: "0x00",
       data: payloadData,
     };
-
-    console.log('\n' + "Raw Transaction Object:");
-    console.log(JSON.stringify(rawTx));
-
+    //make formal transaction based on raw transaction
     const tx = new Transaction(rawTx);
     const estimatedGas = await this.estimateGas(
       tx,
@@ -227,9 +205,6 @@ class EthereumMgr {
     );
     // add some buffer to the limit
     tx.gasLimit = estimatedGas + 1000;
-
-    console.log('\n' + "Normal Transaction Object:");
-    console.log(JSON.stringify(tx));
 
     return tx;
   }
@@ -259,9 +234,6 @@ class EthereumMgr {
     if (!signedRawTx) throw "no signedRawTx";
     if (!networkName) throw "no networkName";
 
-    console.log("\nMade all input checks, in EthereumMgr. sendRawTransaction");
-    console.log("\nThe signed raw transaction is " + signedRawTx);
-
     if (!signedRawTx.startsWith("0x")) {
       console.log("\nsignedRawTx does not start with 0x");
       signedRawTx = "0x" + signedRawTx;
@@ -274,7 +246,6 @@ class EthereumMgr {
           console.log(hash);
     });
     console.log("\ntxHash: " + txHash);
-    console.log("\nNow we are parsing the transaction to store it.");
     let txObj = Wallet.parseTransaction(signedRawTx);
     txObj.gasLimit = txObj.gasLimit.toString(16);
     txObj.gasPrice = txObj.gasPrice.toString();
@@ -371,19 +342,6 @@ class EthereumMgr {
     const client = new Client({
       connectionString: this.pgUrl
     });
-
-    /*
-      Resource Used: AWS RDS - PostgreSQL
-      Resource Link: https://aws.amazon.com/rds/postgresql/getting-started/
-      Need help with PostgreSQL? http://www.postgresqltutorial.com/
-      database scheme:
-        table name: tx
-          columns: TX_HASH | Network | TX_OPTIONS
-          $1 = 'txHash' input that was inserted in the storeTx function
-          $2 = 'networkName' input that was inserted in the storeTx function
-          $3 = 'txObj' input that was inserted in the storeTx function
-            - there also seems to be an attribute called txReceipt
-    */
 
     try {
       await client.connect();
