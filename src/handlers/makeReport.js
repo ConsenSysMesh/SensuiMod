@@ -99,7 +99,8 @@ class MakeReportHandler {
         timestamp: body.timestamp,
         latitide: body.latitude,
         longitude:body.longitude,
-        blockchain: body.blockchain.toLowerCase(), 
+        blockchain: body.blockchain.toLowerCase(),
+        methodName: 'makeReport', 
       });
     } catch (err) {
       console.log("Error on this.ethereumMgr.makeTx");

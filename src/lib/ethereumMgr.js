@@ -139,6 +139,8 @@ class EthereumMgr {
     if (!networkName) throw "no networkName";
     if (!this.pgUrl) throw "no pgUrl set";
 
+    console.log("\nMade all input checks, in EthereumMgr. getNonce");
+
     const client = new Client({
       connectionString: this.pgUrl
     });
@@ -170,6 +172,7 @@ class EthereumMgr {
         RETURNING nonce;",
         [address, networkName]
       );
+      console.log(res.rows[0].nonce);
       return res.rows[0].nonce;
     } catch (e) {
       throw e;
@@ -179,50 +182,44 @@ class EthereumMgr {
   }
 
   //makes transaction body to be signed by the sensui service
-  async makeTx({ report, timestamp, latitide, longitude, blockchain }) {
+  async makeTx({ report, timestamp, latitide, longitude, blockchain, methodName }) {
     //error checks
     if (!report) throw "no report input";
     if (!timestamp) throw "no timestamp input";
     if (!latitide) throw "no latitide input";
     if (!longitude) throw "no longitude input";
+    if (!blockchain) throw "no bllockchain input";
 
-    console.log("Made all input checks, in EthereumMgr. makeTx");
+    console.log("\nMade all input checks, in EthereumMgr. makeTx");
 
     //get ABI and parse through it
     let ABI = JSON.parse(JSON.stringify(ABIJ));
     console.log(ABIJ);
-    console.log("Successfully referenced ABI.");
+    console.log("\nSuccessfully referenced ABI.");
 
     //get function signature from smart contract method, hardcoding smart contract method name for now
     //resource: https://bit.ly/2MTxgXy
     //resource: https://github.com/ethereum/web3.js/blob/develop/lib/web3/function.js
-    let functionDef = new SolidityFunction('', _.find(ABI, { name: 'makeReport' }), '');
+    let functionDef = new SolidityFunction('', _.find(ABI, { name: methodName }), '');
 
     //create data payload for raw transaction
     var payloadData = functionDef.toPayload([report, timestamp, latitide, longitude]).data;
-
-    console.log('Got the data payload ' + payloadData);
-
+    console.log('\nGot the data payload ' + payloadData);
 
     //make raw transaction, hard code smart contract address for now 6/23/2018
-    let txObj = {
-     to: '0x693e3857aa48BB2902FD12F724DC095622e61AfC',
-     data: payloadData,
-     value: '0x0',
-     from: '0xe2f54E82B8E413537B95e739C2e80d99dE40C67B',
-    }
+    let rawTx = {
+      from: '0xe2f54E82B8E413537B95e739C2e80d99dE40C67B',
+      to: '0x693e3857aa48BB2902FD12F724DC095622e61AfC',
+      nonce: await this.web3s[blockchain].eth.getTransactionCount('0xe2f54E82B8E413537B95e739C2e80d99dE40C67B'),
+      gasPrice: await this.getGasPrice(blockchain),
+      value: "0x00",
+      data: payloadData,
+    };
 
-    console.log('\n' + "Normal Transaction Object:");
-    console.log(JSON.stringify(txObj));
+    console.log('\n' + "Raw Transaction Object:");
+    console.log(JSON.stringify(rawTx));
 
-    let tx = new Transaction(txObj);
-    //come up with nonce, gas limit and gas price
-    tx.gasPrice = await this.getGasPrice(blockchain);
-    console.log('\n' + "Tx Gas Price:");
-    console.log(tx.gasPrice);
-    tx.nonce = await this.getNonce(this.signer.getAddress(), blockchain);
-    console.log('\n' + "Tx Gas Nonce:");
-    console.log(tx.nonce);
+    const tx = new Transaction(rawTx);
     const estimatedGas = await this.estimateGas(
       tx,
       this.signer.getAddress(),
@@ -230,10 +227,8 @@ class EthereumMgr {
     );
     // add some buffer to the limit
     tx.gasLimit = estimatedGas + 1000;
-    console.log('\n' + "Tx Gas Limit:");
-    console.log(tx.gasLimit);
 
-    console.log('\n' + "Transformed Transaction Object:");
+    console.log('\n' + "Normal Transaction Object:");
     console.log(JSON.stringify(tx));
 
     return tx;
@@ -244,7 +239,7 @@ class EthereumMgr {
     if (!tx) throw "no tx";
     if (!blockchain) throw "no networkName";
 
-    console.log("Made all input checks, in EthereumMgr. signTx");
+    console.log("\nMade all input checks, in EthereumMgr. signTx");
 
     //take in raw transaction and sign it
     const rawTx = tx.serialize().toString("hex");
@@ -264,20 +259,22 @@ class EthereumMgr {
     if (!signedRawTx) throw "no signedRawTx";
     if (!networkName) throw "no networkName";
 
-    console.log("Made all input checks, in EthereumMgr. sendRawTransaction");
-    console.log("The signed raw transaction is " + signedRawTx);
+    console.log("\nMade all input checks, in EthereumMgr. sendRawTransaction");
+    console.log("\nThe signed raw transaction is " + signedRawTx);
 
     if (!signedRawTx.startsWith("0x")) {
-      console.log("signedRawTx does not start with 0x");
+      console.log("\nsignedRawTx does not start with 0x");
       signedRawTx = "0x" + signedRawTx;
     }
 
     console.log("\n" + "Getting transaction hash. Using the " + networkName + " network.");
     const txHash = await this.web3s[networkName].eth.sendRawTransactionAsync(
-      signedRawTx
-    );
-    console.log("txHash: " + txHash);
-    console.log("Now we are parsing the transaction to store it.");
+      signedRawTx, function(err, hash) {
+        if (!err)
+          console.log(hash);
+    });
+    console.log("\ntxHash: " + txHash);
+    console.log("\nNow we are parsing the transaction to store it.");
     let txObj = Wallet.parseTransaction(signedRawTx);
     txObj.gasLimit = txObj.gasLimit.toString(16);
     txObj.gasPrice = txObj.gasPrice.toString();
