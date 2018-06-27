@@ -1,11 +1,16 @@
-# lambda-sensui
-The lambda-sensui repository consists of a tx funding service originally developed by the uPort team. The purpose of the service is to make transactions feeless for the end user, and forward those costs to the application itself, providing a much better user experience for the Ethereum-based Dapps. Feeless transactions for users is a mainstream expectation, as many consumers are not used to paying transaction fees on traditional applications, particularly not for things like form submission or logging in. By leveraging repositories like this one, you can develop a much more streamlined application UX for end-users, and make the use of your application more akin to the speed and simplicity of traditional apps (with the power of the blockchain of course!).
+# lambda-sensuiMod
+The lambda-sensuiMod repository, created by ConsenSys Social Impact (CSI), consists of a tx funding service and is based on the [lambda-sensui](https://github.com/uport-project/lambda-sensui) repository originally developed by the ConsenSys uPort team. The core difference between the two repositories is rather simple, and consists of the following: 
+
+- uPort's lambda-sensui service (AWS Lambda API) requires a signed meta-transaction POST request from an authorized user of a DApp. In order to sign this request, the user must be using an extension or browser akin to a MetaMask or Brave. 
+- CSI's lambda-sensuiMod service (AWS Lambda API) doesn't require a signed meta-transaction POST request from an authorized user of a DApp. It simply requires normal text input being processed for the user and their authorization token. 
+
+This core difference hurdles an integral architecture obstacle for many already developed applications within the social sector - the lack of ability to assign ethereum key pairs (a public and private address) to users. Many applications within the social sector do not have the user experience flexibility to dictate the use of a MetaMask or Brave Browser, as great as those tools are. Because of this, and because of the remaining (and emphasized) fact that social sector users (1) aren't using these tools and (2) typically do not have any Ether to pay for transaction fees, it was necessary to modify the sensui service into an API that could process normal (non tx based) POST requests AND create, sign, and pay for the resulting new transaction from that POST request of data that needs to be submitted on-chain. 
+
+More simply put, the purpose of the service is the following: 
+1. To naturally integrate into traditional, social sector application architecture and not force product development teams to assign key pairs to their users
+2. To provide a method (much like lambda-sensui) that shields users from transaction costs so that the use of the ethereum blockchain does not interupt the user experience with complexities like gas fees and tokens
 
 The build leverages the [serverless framework](https://serverless.com/learn/) provided by [AWS Lambda](https://aws.amazon.com/lambda/) and AWS S3 to save tx history. AWS Lambda lets you run code without provisioning or managing servers. You pay only for the compute time you consume - there is no charge when your code is not running.)
-
-[![CircleCI](https://circleci.com/gh/uport-project/lambda-sensui.svg?style=svg&circle-token=b2953f00d5cd866df70f0c221e2018e6ab6683b8)](https://circleci.com/gh/uport-project/lambda-sensui)
-
-[![codecov](https://codecov.io/gh/uport-project/lambda-sensui/branch/master/graph/badge.svg?token=h0GWHsuPtL)](https://codecov.io/gh/uport-project/lambda-sensui)
 
 ## Repository Basics
 
@@ -29,12 +34,16 @@ Using AWS Lambda as the logic layer of a serverless application can enable faste
 
 To learn more about Serverless Architectures with AWS Lambda, check out [this publication](https://d1.awsstatic.com/whitepapers/serverless-architectures-with-aws-lambda.pdf) that goes through the whole build
 
-### So How Does this All Come Together w/ lambda-sensui?
-To put it simply, this is out the Lambda Sensui server helps sheild front end dapp users from paying transaction costs: 
-1. User goes on application and registers a transaction (let's say their submitting a report, and they want to hash that report on chain). We don't want to have them need to pay any transaction costs of course!
-2. User signs the transaction (instead of paying for it) and creates a signed message, which includes the user's address and any information relevant to the submitted report. 
-3. Signed transaction message is sent to the sensui server, which then commits the message on the blockchain and pays for the transaction. By using the serveless AWS lambda architecture, it is easy to set up our service to help do this (albeit, it is centralized). 
-4. User transaction complete!
+### So How Does this All Come Together w/ lambda-sensuiMod?
+To put it simply, this is out the Lambda Sensui Mod server helps sheild front end dapp users from paying transaction costs: 
+1. User goes on application like normal and submits an action that needs to be recorded on-chain (like submitting a form)
+2. Form inputs are sent to Lambda Sensui Mod service, and the user's application access is authenticated (first) and then the input is transformed into a data payload (along with the appropiate smart contract method that will be used to commit the data on chain)
+3. The data payload is put into a new transaction object 
+4. The transaction oobject attributes are appropiately filled in (gasPrice, Nonce, to, from, value, gasLimit)
+5. The transaction object is serialized 
+6. The transaction object is signed by the private key of the Lambda Sensui Mod service
+7. The transaction is sent to the ethereum blockchain network (of choice) and the transaction is paid for 
+8. The transaction hash is recieved upon the successful confirmation of the transaction and the transaction is complete!
 
 ### How is the Repository Organized?
 The following list breakdown the folder architecture within the repository, explaining where everything is at (and what those part of the repository are responsible for). Hopefully, through this explanation, you can localize different parts of the repository that you want to change/fix/enhance: 
@@ -67,10 +76,19 @@ The `functions` block defines what code to deploy. These are the methods of your
 - **SECRETS.md** - This file provides the kms commands that you need to use to both encrypt (and set) your SECRETS for your service and decrypt those secrets when needed. The structure of the secrets provided in this service is the following: 
 ```
 {
-  PG_URL: [the postgress url associated with the service to commit data to the database, and query data from the database],
-  SEED: [12 word mnemonic used for funding wallet - note that you can derive multiple wallets from one seed. The mnemonic is an encoding for a seed value. That seed is then converted into the master private key],
-  NISABA_PUBKEY: [the aws lambda public key for your nisaba service],
-  SLACK_URL: [Incoming Webhooks are a simple way to post messages from external sources into Slack. They make use of normal HTTP requests with a JSON payload that includes the message text and some options. Message Attachments can also be used in Incoming Webhooks to display richly-formatted messages that stand out from regular chat messages. See more at https://api.slack.com/incoming-webhooks]
+  PG_URL: [the postgress url associated with the service to commit data to the database, and query data from the database - REQUIRED],
+  
+  SEED: [12 word mnemonic used for funding wallet - note that you can derive multiple wallets from one seed. The mnemonic is    an encoding for a seed value. That seed is then converted into the master private key - REQUIRED],
+  
+  NISABA_PUBKEY: [the aws lambda public key for your nisaba service - REQUIRED],
+  
+  SLACK_URL: [Incoming Webhooks are a simple way to post messages from external sources into Slack. They make use of normal HTTP requests with a JSON payload that includes the message text and some options. Message Attachments can also be used in Incoming Webhooks to display richly-formatted messages that stand out from regular chat messages. See more at https://api.slack.com/incoming-webhooks - REQUIRED], 
+  
+  PRIVATE_KEY: [private key of the account that the service controls - OPTIONAL]
+
+  PUBLIC_KEY: [public key of the account that the service controls - OPTIONAL]
+
+  INFURA_KEY: [Infura key for service's node on all test and main networks on ethereum - REQUIRED] 
 }
 ```
 
@@ -156,8 +174,8 @@ The authorization header needs a JWT token that is signed by the nisaba service 
 }
 ```
 
-## Relay
-`POST /relay`
+## TBD
+TBD
 
 #### Header
 ```
