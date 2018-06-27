@@ -174,8 +174,21 @@ The authorization header needs a JWT token that is signed by the nisaba service 
 }
 ```
 
-## TBD
-TBD
+## Customized Endpoints Based on Smart Contract Needs
+The result of taking away the metaTx aspect of the original sensui service does have its drawbacks (ones that we are trying to better generalized via this repository). The main drawback is that the deevloper needs to now customize his endpoints to the different smart contract methods that he is trying to use (in connection to the user's front end experience). 
+
+Here's an example of what we mean: 
+Say we have a user experience that is submitting a form. We want the user to be able to immutably submit a form of information without even knowing blockchain is being used. So no metamask and no transaction fees. In order to get the sensuiMod service up and running in our application, your development team would need to take the following steps: 
+
+1. Develop and test your smart contract that is going to store the data on chain 
+2. Go to Solidity Remix, create a new file on the platform and copy and paste your smart contract in the code area
+3. Compile and submit the smart contract on the network that you'd like to deploy to. Remember, to do this, you do need to have metamask installed on your browser (chrome or firefox) so that you can pay for the transaction fee of deploying your smart contract. You need to make sure that your metamask is signed in on the same network that you're deploying to on Remix. So if you are trying to deploy on Rinkeby, you need to be on the Rinkeby network on metamask and have some Rinkeby test eth to pay for the transaction.
+4. Once the transaction is submitted and the smart contract is deployed, you need to find the ABI json output of your smart contract, copy and paste it into a json file named 'YourSmartContractName.json' and replace the current json file in the `src/build/contracts` folder 
+5. You need to go into the `ethereumMgr` file and make sure that your code is referencing the correct ABI file (not the old one that the repo is referencing)
+6. You need to go into the `serverless.yml` file and change the 'makeReport' function (this part will probably be generalized to makeTransaction, so in the future you will not need to do all of this). Change it to whatever you want - but this is the function call that will end up making the transaction that goes to your smart contract function to store your form data (given the example)
+7. Go into the `api_handler.js` file and change the 'makeReport' function just as you did in the `serverless file`, you also need to make sure that the function is pointing to an aptly named Handler 
+8. Go the the handler file in the `src/handlers` folder and yet again change the file name of makeReport to your new file name. You wont need to change much of this file - just the inputs that your app is submitting and the `methodName` being submitted in the rawTx variable
+9. You now have your custom endpoint(s) to your own smart contract(s)!
 
 #### Header
 ```
@@ -185,8 +198,8 @@ Authorization: Bearer <jwt token>
 #### Body
 ```
 {
-  metaSignedTx: <metaSignedTx>,
-  blockchain: <blockchain name>
+  input: Input from user/service necessary for smart contract to process, 
+  blockchain: <blockchain network name>, 
 }
 ```
 #### Response
