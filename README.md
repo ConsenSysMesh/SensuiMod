@@ -109,7 +109,7 @@ The `functions` block defines what code to deploy. These are the methods of your
 
 6. Create a KMS key in AWS IAM service, under Encryption keys. Collect the key id, which is the remaining part of the key ARN. You need to create a key for each development stage of your service. 
 
-7. Use the encryption command (on your terminal which should be in the folder path of the project) to set and encrypt you secrets for each of your development stage services via the following: 
+7. Use the encryption command (on your terminal which should be in the folder path of the project) to set and encrypt your secrets for each of your development stage services via the following (of course, you will need to make an account on all the services that these keys are acquired from as well!): 
 
 ```
 sls encrypt -n SECRET_VARIABLE_NAME -v SECRET_VARIABLE_VALUE -s STAGE_YOUR_SETTING_SECRET_FOR 
@@ -121,7 +121,7 @@ Since you indicated which stage your encypting the secret for, it will determine
 
 9. Create an endpoint that points to where your service lives using the command `sls deploy`. This will generate a url to use for calling the different endpoints indicated in your API. Remember, we indicated what these endpoints were in the `serverless.yml` file in the functions sub-sections called `events`, where we define the mapping of the API functions to the http endpoints of `v1/fund`, `fund`, `v2/relay`, `relay`, and `checkPending`. 
 
-10. You also need to ensure that you have a NISABA like service running as well. Remember, all this is is another serverless service on AWS lambda that handles JWT token creation given a user signing up and logging in. This service should interact with an authentication challenge like a text reponse challenge or captcha challenge when the user is first signing up. Resources like [nexmo](https://www.nexmo.com/products/sms) are very helpful for this purpose and can extend usage of your application to both web and mobile. 
+10. [OPTIONAL] You also need to ensure that you have a NISABA like service running as well. Remember, all this is is another serverless service on AWS lambda that handles JWT token creation given a user signing up and logging in. This service should interact with an authentication challenge like a text reponse challenge or captcha challenge when the user is first signing up. Resources like [nexmo](https://www.nexmo.com/products/sms) are very helpful for this purpose and can extend usage of your application to both web and mobile. 
 
 ## API Description
 
