@@ -191,7 +191,7 @@ class EthereumMgr {
     let rawTx = {
       from: '0xe2f54E82B8E413537B95e739C2e80d99dE40C67B',
       to: '0x693e3857aa48BB2902FD12F724DC095622e61AfC',
-      nonce: await this.web3s[blockchain].eth.getTransactionCount('0xe2f54E82B8E413537B95e739C2e80d99dE40C67B'),
+      nonce: await this.getNonce(this.signer.getAddress(), blockchain),
       gasPrice: await this.getGasPrice(blockchain),
       value: "0x00",
       data: payloadData,

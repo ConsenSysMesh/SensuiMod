@@ -90,7 +90,7 @@ class MakeReportHandler {
     } catch (err) {
       console.log("Error on this.ethereumMgr.makeTx");
       console.log(err);
-      cb({ code: 500, message: err.message });
+      cb({ code: 500, message: err.message + " Originating from makeReport.js calling makeTx from ethereumMgr.js."});
       return;
     }
 
@@ -106,7 +106,7 @@ class MakeReportHandler {
     } catch (err) {
       console.log("Error on this.ethereumMgr.signTx");
       console.log(err);
-      cb({ code: 500, message: err.message });
+      cb({ code: 500, message: "Sign Raw Tx Error: " + err.message });
       return;
     }
 
@@ -121,7 +121,7 @@ class MakeReportHandler {
     } catch (err) {
       console.log("Error on this.ethereumMgr.sendRawTransaction");
       console.log(err);
-      cb({ code: 500, message: err.message });
+      cb({ code: 500, message: "Send Raw Tx Error: " +  err.message });
       return;
     }
 
