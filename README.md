@@ -218,3 +218,42 @@ Authorization: Bearer <jwt token>
   txHash: <tx hash>
 }
 ```
+
+## Example of Customized Endpoints (Immutable Evidence)
+An example of using customizable endpoints with the sensuiMod build is included in the repository. The two unique smart contract based endpoints are (1) /MakeReport and (2) /MakeHistoricalReport. MakeReport allows you to submit the SHA256 hash of a particular data set onchain into a mapping for immutable store and reference, and MakeHistoricalReport allows you to submit the SHA256 hash of a span of datasets (all concatenated together) for more scalable immutable store and reference. Here are the data attributes required within each call: 
+
+#### MakeReport 
+  - report; //stringified json of event data
+  - uint32 reportTimestamp; //timestamp of event data
+  - string reportType; //type of event (iot, human reported, etc)
+  - uint32 reportUserId; //id of iot device of user that reported event
+
+#### MakeHistoricalReport 
+  - string reports, //stringified json of all historical event data concatenated together in a certain period (week, month..)
+  - string timecategory, //time period of data set (week of reports, month of reports etc)
+  - uint256 earliestTimestamp, //earliest timestamp of report in batch 
+  - uint256 lastestTimestamp, //latest timestamp of report in batch 
+  - uint256 firstId, //first databse id of report in batch
+  - uint256 lastId //last databse id of report in batch
+  
+  
+To test the endpoints, please set up the service with AWS lambda, deploy it, and then use postman. Follow these instructions to get postman to submit the POST requests: 
+
+1. Use the "AWS Signature" Authorization header and input your (1) AWS IAM AccessKey, (2) AWS IAM SecretKey, (3) AWS IAM Region, and (4) AWS IAM Service Name - which should be execute-api.
+
+2. Your Body should use the raw format. For example, the body for making a test call to makeReport endpoint would be this: 
+
+{
+"report": "This is the second message!", 
+"timestamp":"1529823188", 
+"reportId":"37", 
+"reportType":"Iot Sensor", 
+"blockchain":"Rinkeby"
+}
+
+## Common Bugs 
+
+### “Cannot Connect to Node” Error with Infura
+Make sure that you go to the smart contract on the network, check the number of transactions that the smart contract has here, click on the last transaction to take place, and look at the "Nonce & {Position}:” value (last time I checked it was 15). Then, use Presql and go to the nonce table entry (under the Nonce column) and change that number to 15 (or whatever number you find). The Nonce column should only have one row per address per network, and the nonce just increments. 
+
+Also, make sure that when you are making a call from your event’s service, that you are using the proper AWS authentication in the header of the API call to the server less endpoint. Let me know if you have any questions, but with this, you should be able to call the sensui lambda service from your events service to store event data on chain. 
