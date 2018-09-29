@@ -1,19 +1,19 @@
 /*
 method: makeReport
 needed parameters in url endpoint:
-  - bytes32 reportHash; //hash of event data
-  - uint32 reportTimestamp; //timestamp of event data
-  - string reportType; //type of event (iot, human reported, etc)
-  - uint32 reportUserId; //id of iot device of user that reported event
+  - string reportsHash,
+  - string timecategory,
+  - uint256 earliestTimestamp,
+  - uint256 lastestTimestamp,
+  - uint256 firstId,
+  - uint256 lastId
 
-activates makeReportHandler, which takes the following inputs (which are instatited
+activates makeHistoricalReportHandler, which takes the following inputs (which are instatited
 at the top of the file):
   - authMgr*
   - ethereumMgr
 
-Purpose: this activates the handle method in handlers/makeReport.js, which verifies creates
-meta transaction, signs it, and send it to the smart contract function to be committed to the
-blockchain. The function also pays for the transaction
+Purpose: this activates the handle method in handlers/makeHistoricalReport.js, which verifies creates meta transaction, signs it, and send it to the smart contract function to be committed to the blockchain. The function also pays for the transaction (for groups of report data that have occurred in the past)
 */
 class MakeReportHandler {
   constructor(ethereumMgr) {
@@ -51,20 +51,28 @@ class MakeReportHandler {
     }
 
     /* checking for inputs */
-    if (!body.report) {
+    if (!body.reports) {
       cb({ code: 400, message: "report parameter missing" });
       return;
     }
-    if (!body.timestamp) {
-      cb({ code: 400, message: "timestamp parameter missing" });
+    if (!body.timeCategory) {
+      cb({ code: 400, message: "time category parameter missing" });
       return;
     }
-    if (!body.reportType) {
-      cb({ code: 400, message: "report type parameter missing" });
+    if (!body.earliestTimestamp) {
+      cb({ code: 400, message: "earliest timestamp parameter missing" });
       return;
     }
-    if (!body.reportUserId) {
-      cb({ code: 400, message: "report user id parameter missing" });
+    if (!body.lastestTimestamp) {
+      cb({ code: 400, message: "latest timestamp parameter missing" });
+      return;
+    }
+    if (!body.firstReportId) {
+      cb({ code: 400, message: "frist report id parameter missing" });
+      return;
+    }
+    if (!body.lastReportId) {
+      cb({ code: 400, message: "last report id parameter missing" });
       return;
     }
     if (!body.blockchain) {
@@ -80,17 +88,19 @@ class MakeReportHandler {
     let rawTx;
     try {
       rawTx = await this.ethereumMgr.makeTx({
-        report: body.report,
-        timestamp: body.timestamp,
-        reportType: body.reportType,
-        reportUserId: body.reportUserId,
+        reports: body.reports,
+        timeCategory: body.timeCategory,
+        earliestTimestamp: body.earliesTimestamp,
+        latestTimestamp: body.latestTimestamp,
+        firstId: body.firstId,
+        lastId:body.lastId,
         blockchain: body.blockchain.toLowerCase(),
-        methodName: 'makeReport',
+        methodName: 'makeHistoricalReport',
       });
     } catch (err) {
       console.log("Error on this.ethereumMgr.makeTx");
       console.log(err);
-      cb({ code: 500, message: err.message + " Originating from makeReport.js calling makeTx from ethereumMgr.js."});
+      cb({ code: 500, message: err.message + " Originating from makeHistoricalReport.js calling makeTx from ethereumMgr.js."});
       return;
     }
 
@@ -127,4 +137,4 @@ class MakeReportHandler {
 
   }
 }
-module.exports = MakeReportHandler;
+module.exports = MakeHistoricalReportHandler;

@@ -91,3 +91,10 @@ functions:
      - http:
          path: makeReport
          method: post
+  makeHistoricalReport:
+    handler: src/api_handler.makeHistoricalReport
+    description: create transaction and send to smart contract to make a historical report
+    events:
+     - http:
+         path: makeHistoricalReport
+         method: post

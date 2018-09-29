@@ -163,13 +163,11 @@ class EthereumMgr {
   }
 
   //makes transaction body to be signed by the sensui service
-  async makeTx({ report, timestamp, latitide, longitude, blockchain, methodName }) {
+  async makeTx(dataPayload) {
     //error checks
-    if (!report) throw "no report input";
-    if (!timestamp) throw "no timestamp input";
-    if (!latitide) throw "no latitide input";
-    if (!longitude) throw "no longitude input";
-    if (!blockchain) throw "no bllockchain input";
+    if (dataPayload.methodName !== "makeHistoricalReport" || dataPayload.methodName === "makeReport") {
+      throw "incorrect methodname being called";
+    }
 
     console.log("\nMade all input checks, in EthereumMgr. makeTx");
 
@@ -184,10 +182,20 @@ class EthereumMgr {
     let functionDef = new SolidityFunction('', _.find(ABI, { name: methodName }), '');
 
     //create data payload for raw transaction
-    var payloadData = functionDef.toPayload([report, timestamp, latitide, longitude]).data;
-    console.log('\nGot the data payload ' + payloadData);
+    var payloadData;
+    if (dataPayload.methodName !== "makeReport") {
+      var payloadData = functionDef.toPayload([dataPayload.report, dataPayload.timestamp, dataPayload.reportType, dataPayload.reportUserId]).data;
+      console.log('\nGot the data payload ' + payloadData);
+    } else if (dataPayload.methodName !== "makeHistoricalReport") {
+      var payloadData = functionDef.toPayload([dataPayload.report, dataPayload.timeCategory, dataPayload.earliestTimestamp, dataPayload.latestTimestamp, dataPayload.firstId, dataPayload.lastId]).data;
+      console.log('\nGot the data payload ' + payloadData);
+    }
+
 
     //make raw transaction, hard code smart contract address for now 6/23/2018
+    //from = funding ethereum Address
+    //to = contract address (old contract: 0x693e3857aa48BB2902FD12F724DC095622e61AfC)
+    //new contract = TBD 9/29/2018
     let rawTx = {
       from: '0xe2f54E82B8E413537B95e739C2e80d99dE40C67B',
       to: '0x693e3857aa48BB2902FD12F724DC095622e61AfC',
@@ -343,18 +351,26 @@ class EthereumMgr {
       connectionString: this.pgUrl
     });
 
-    try {
-      await client.connect();
-      const res = await client.query(
-        "INSERT INTO tx(tx_hash, network,tx_options) \
-             VALUES ($1,$2,$3) ",
-        [txHash, networkName, txObj]
-      );
-    } catch (e) {
-      throw e;
-    } finally {
-      await client.end();
+    //check if the transaction has actually completed
+    let txReceipt = this.getTransactionReceipt(txHash, networkName);
+
+    if (txReceipt.status) {
+      try {
+        await client.connect();
+        const res = await client.query(
+          "INSERT INTO tx(tx_hash, network,tx_options) \
+               VALUES ($1,$2,$3) ",
+          [txHash, networkName, txObj]
+        );
+      } catch (e) {
+        throw e;
+      } finally {
+        await client.end();
+      }
+    } else {
+      throw 'no transaction receipt available';
     }
+
   }
 
   async getTransactionReceipt(txHash, networkName) {

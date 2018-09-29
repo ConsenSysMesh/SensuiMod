@@ -8,6 +8,7 @@ const MetaTxMgr = require("./lib/metaTxMgr");
 const FundHandler = require("./handlers/fund");
 const CheckPendingHandler = require('./handlers/checkPending');
 const MakeReportHandler = require('./handlers/makeReport');
+const MakeHistoricalReportHandler = require('./handlers/makeHistoricalReport');
 
 /*
 creating instantiations of the necessary elements to carry out
@@ -20,6 +21,7 @@ let metaTxMgr = new MetaTxMgr(ethereumMgr);
 let fundHandler = new FundHandler(authMgr, txMgr, ethereumMgr);
 let checkPendingHandler = new CheckPendingHandler(ethereumMgr);
 let makeReportHandler = new MakeReportHandler(ethereumMgr);
+let makeHistoricalReportHandler = new MakeHistoricalReportHandler(ethereumMgr);
 
 /*
 method: fund
@@ -63,6 +65,27 @@ meta transaction, signs it, and send it to the smart contract function to be com
 blockchain. The function also pays for the transaction
 */
 module.exports.makeReport = (event, context, callback) => {
+  preHandler(makeReportHandler, event, context, callback);
+};
+
+/*
+method: makeReport
+needed parameters in url endpoint:
+  - string reportsHash,
+  - string timecategory,
+  - uint256 earliestTimestamp,
+  - uint256 lastestTimestamp,
+  - uint256 firstId,
+  - uint256 lastId
+
+activates makeHistoricalReportHandler, which takes the following inputs (which are instatited
+at the top of the file):
+  - authMgr*
+  - ethereumMgr
+
+Purpose: this activates the handle method in handlers/makeHistoricalReport.js, which verifies creates meta transaction, signs it, and send it to the smart contract function to be committed to the blockchain. The function also pays for the transaction (for groups of report data that have occurred in the past)
+*/
+module.exports.makeHistoricalReport = (event, context, callback) => {
   preHandler(makeReportHandler, event, context, callback);
 };
 
