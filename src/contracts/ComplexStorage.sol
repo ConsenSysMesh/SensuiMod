@@ -40,7 +40,6 @@ contract ComplexStorage is Ownable {
 	uint public numCurrentReports; //total number of reports hashed
 	mapping (bytes32 => Report) public incomingReports; //hash of report is report hash --> report struct
 	struct Report {
-		bytes32 reportHash; //hash of event data
 		uint32 reportTimestamp; //timestamp of event data
     string reportType; //type of event (iot, human reported, etc)
     uint32 reportUserId; //id of iot device of user that reported event
@@ -52,15 +51,25 @@ contract ComplexStorage is Ownable {
   uint public numHistoricalReports; //total number of reports hashed
   mapping (bytes32 => HistoricalReport) public historicalReports; //hash of report is report hash --> report struct
   struct HistoricalReport {
-    bytes32 historyHash; //hash of all report data during a specified time period (ex: week)
     uint32 startTime; //earliest time period of earliest report timestamp in list of hashed reports
     uint32 endTime; //latest time period of earliest report timestamp in list of hashed reports
     uint32 firstReportId; //lowest databse report id in hashed list of reports
     uint32 lastReportId; //highest databse report id in hashed list of reports
     string timeCategory; //weekly, monthly, yearly
-    string reportNum;
+    uint256 reportNum;
     bool exists;
   }
+
+  /* History Reports changes 10/5/2018
+    - instead of report input - we may have URL - but need to make sure its not shown to everyone
+    - add encyption of data
+    - add hash of encrypted data (before encyrption)
+    - processes to hash evidence off-chain before committed on chain (to not lose time credibility)
+    - potential use of IPFS urls
+
+    actions:
+    - create renewed solution document
+  */
 
 	//constructor
 	constructor() public {
@@ -70,45 +79,31 @@ contract ComplexStorage is Ownable {
 	}
 
 	//events
-	event ReportMade (bytes32 _reportHash, uint32 _reportTimestamp, uint32 _reportUserId);
-  event HistoricalReportMade (bytes32 _reportHash, string _timeCategory);
+	event ReportMade (bytes32 _reportHash, uint32 _reportTimestamp, string _reportType);
+  event HistoricalReportMade (bytes32 _reportsHash, string _timeCategory);
   event GetReport (bytes32 _reportHash, address _inquirer);
 
 	//functions
 		//make a report (only by owner, which makes sense because all api calls will use owner address)
-		function makeReport(string report, uint32 timestamp, string type, uint32 userId) public onlyOwner returns (bool) {
+		function makeReport(string _reportHash, uint32 _timestamp, string _type, uint32 _userId) public onlyOwner returns (bool) {
 			//incrementing Account
 			numCurrentReports += 1;
-			//hash report
-			bytes32 reportHashed = sha256(report);
 			//adding new report to reports
-			incomingReports[reportHashed].reportHash = reportHashed; //should be hashed before entering mapping?
-			incomingReports[reportHashed].reportTimestamp = timestamp;
-      incomingReports[reportHashed].reportUserId = userId;
-      incomingReports[reportHashed].reportType = type;
-      incomingReports[reportHashed].reportNum = numReports;
+			incomingReports[_reportHash] = Report(_timestamp, _userId, _type, _numReports, true);
 			//emit event
-			emit ReportMade(incomingReports[reportHashed].reportHash, incomingReports[reportHashed].reportTimestamp, incomingReports[reportHashed].reportUserId);
+			emit ReportMade(_reportHash, _timestamp, _type);
 			return true;
 		}
 
     //make historical report (only by owner, which makes sense because all api calls will use owner address)
-		function makeHistoricalReport(string reports, string timecategory, uint32 earliestTimestamp, uint32 lastestTimestamp, uint32 firstId, uint32 lastId) public onlyOwner returns (bool) {
+		function makeHistoricalReport(string _reportsHash, string _timecategory, uint32 _earliestTimestamp, uint32 _lastestTimestamp, uint32 _firstId, uint32 _lastId) public onlyOwner returns (bool) {
 			//incrementing Account
 			numHistoricalReports += 1;
-			//hash report
-			bytes32 reportsHashed = sha256(reports);
 			//adding new report to reports
       //should be hashed before entering mapping?
-			historicalReports[reportsHashed].historyHash = reportsHashed;
-			historicalReports[reportsHashed].startTime = earliestTimestamp;
-      historicalReports[reportsHashed].endTime = lastestTimestamp;
-      historicalReports[reportsHashed].timeCategory = timecategory;
-      historicalReports[reportsHashed].firstReportId = firstId;
-      historicalReports[reportsHashed].lastReportId = lastId;
-      historicalReports[reportsHashed].reportNum = numHistoricalReports;
+      historicalReports[_reportsHash] = HistoricalReport(_earliestTimestamp, _lastestTimestamp, _timecategory, _firstId, _lastId, numHistoricalReports, true);
 			//emit event
-			emit HistoricalReportMade(historicalReports[reportsHashed].reportHash, historicalReports[reportsHashed].timeCategory);
+			emit HistoricalReportMade(_reportsHash, timecategory);
 			return true;
 		}
 
