@@ -179,14 +179,14 @@ class EthereumMgr {
     //get function signature from smart contract method, hardcoding smart contract method name for now
     //resource: https://bit.ly/2MTxgXy
     //resource: https://github.com/ethereum/web3.js/blob/develop/lib/web3/function.js
-    let functionDef = new SolidityFunction('', _.find(ABI, { name: methodName }), '');
+    let functionDef = new SolidityFunction('', _.find(ABI, { name: dataPayload.methodName }), '');
 
     //create data payload for raw transaction
     var payloadData;
-    if (dataPayload.methodName !== "makeReport") {
+    if (dataPayload.methodName === "makeReport") {
       var payloadData = functionDef.toPayload([dataPayload.report, dataPayload.timestamp, dataPayload.reportType, dataPayload.reportUserId]).data;
       console.log('\nGot the data payload ' + payloadData);
-    } else if (dataPayload.methodName !== "makeHistoricalReport") {
+    } else if (dataPayload.methodName === "makeHistoricalReport") {
       var payloadData = functionDef.toPayload([dataPayload.report, dataPayload.timeCategory, dataPayload.earliestTimestamp, dataPayload.latestTimestamp, dataPayload.firstId, dataPayload.lastId]).data;
       console.log('\nGot the data payload ' + payloadData);
     }
