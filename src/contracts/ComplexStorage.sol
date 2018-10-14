@@ -78,23 +78,23 @@ contract ComplexStorage is Ownable {
 
 	//functions
 		//make a report (only by owner, which makes sense because all api calls will use owner address)
-		function makeReport(string _reportHash, uint32 _timestamp, string _type, uint32 _userId, string _reportUrl, bytes32 _reportKeyHash) public onlyOwner returns (bool) {
+		function makeReport(string _reportHash, uint32 _timestamp, string _type, uint32 _userId, string _reportUrl, bytes32 _reportKeyHash, string _reportKeyRevealed) public onlyOwner returns (bool) {
 			//incrementing Account
 			numCurrentReports += 1;
 			//adding new report to reports
-			incomingReports[_reportHash] = Report(_timestamp, _userId, _type, _numReports, _reportUrl, _reportKeyHash, "NULL", true);
+			incomingReports[_reportHash] = Report(_timestamp, _userId, _type, _numReports, _reportUrl, _reportKeyHash, _reportKeyRevealed, true);
 			//emit event
 			emit ReportMade(_reportHash, _timestamp, _type, _reportUrl, _reportKeyHash);
 			return true;
 		}
 
     //make historical report (only by owner, which makes sense because all api calls will use owner address)
-		function makeHistoricalReport(string _reportsHash, string _timecategory, string _reportURL, bytes32 _reportKeyHash) public onlyOwner returns (bool) {
+		function makeHistoricalReport(string _reportsHash, string _timecategory, string _reportURL, bytes32 _reportKeyHash, string _reportKeyRevealed) public onlyOwner returns (bool) {
 			//incrementing Account
 			numHistoricalReports += 1;
 			//adding new report to reports
       //should be hashed before entering mapping?
-      historicalReports[_reportsHash] = HistoricalReport(_earliestTimestamp, _lastestTimestamp, _timecategory, _firstId, _lastId, numHistoricalReports, _reportURL, "NULL", true);
+      historicalReports[_reportsHash] = HistoricalReport(_earliestTimestamp, _lastestTimestamp, _timecategory, _firstId, _lastId, numHistoricalReports, _reportURL, _reportKeyRevealed, true);
 			//emit event
 			emit HistoricalReportMade(_reportsHash, timecategory, _reportURL);
 			return true;

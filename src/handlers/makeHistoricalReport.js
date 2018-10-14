@@ -75,6 +75,14 @@ class MakeHistoricalReportHandler {
       cb({ code: 400, message: "last report id parameter missing" });
       return;
     }
+    if (!body.reportKeyHash) {
+      cb({ code: 400, message: "report key hash parameter missing" });
+      return;
+    }
+    if (!body.reportKeyRevealed) {
+      cb({ code: 400, message: "report key revealed parameter missing" });
+      return;
+    }
     if (!body.blockchain) {
       cb({ code: 400, message: "blockchain parameter missing" });
       return;
@@ -94,6 +102,8 @@ class MakeHistoricalReportHandler {
         latestTimestamp: body.latestTimestamp,
         firstId: body.firstId,
         lastId:body.lastId,
+        reportKeyHash: body.reportKeyHash,
+        reportKeyRevealed: body.reportKeyRevealed,
         blockchain: body.blockchain.toLowerCase(),
         methodName: 'makeHistoricalReport',
       });
