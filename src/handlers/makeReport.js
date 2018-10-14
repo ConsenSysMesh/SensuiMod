@@ -67,6 +67,10 @@ class MakeReportHandler {
       cb({ code: 400, message: "report user id parameter missing" });
       return;
     }
+    if (!body.reportUrl) {
+      cb({ code: 400, message: "report Url hash parameter missing" });
+      return;
+    }
     if (!body.reportKeyHash) {
       cb({ code: 400, message: "report key hash parameter missing" });
       return;
@@ -91,6 +95,7 @@ class MakeReportHandler {
         report: body.report,
         timestamp: body.timestamp,
         reportType: body.reportType,
+        reportUrl: body.reportUrl,
         reportUserId: body.reportUserId,
         reportKeyHash: body.reportKeyHash,
         reportKeyRevealed: body.reportKeyRevealed,

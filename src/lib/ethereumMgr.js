@@ -35,6 +35,7 @@ import fs from 'fs';
 import ABIJ from '../build/contracts/ComplexStorage.json';
 import _ from 'lodash';
 import Promise from "bluebird";
+import { sha256, sha224 } from 'js-sha256';
 //soon to be deprecated, needs to be exchanged - 6/11/2018
 import { generators, signers } from "eth-signer";
 import Transaction from "ethereumjs-tx";
@@ -185,21 +186,19 @@ class EthereumMgr {
     //create data payload for raw transaction
     var payloadData;
     if (dataPayload.methodName === "makeReport") {
-      var payloadData = functionDef.toPayload([dataPayload.report, dataPayload.timestamp, dataPayload.reportType, dataPayload.reportUserId]).data;
-      console.log('\nGot the data payload ' + payloadData);
+      var payloadData = functionDef.toPayload([sha256(dataPayload.report), dataPayload.timestamp, dataPayload.reportType, dataPayload.reportUserId, dataPayload.reportUrl, dataPayload.reportKeyHash, dataPayload.reportKeyRevealed]).data;
     } else if (dataPayload.methodName === "makeHistoricalReport") {
-      var payloadData = functionDef.toPayload([dataPayload.report, dataPayload.timeCategory, dataPayload.earliestTimestamp, dataPayload.latestTimestamp, dataPayload.firstId, dataPayload.lastId]).data;
+      var payloadData = functionDef.toPayload([sha256(dataPayload.report), dataPayload.timeCategory, dataPayload.reportUrl, dataPayload.reportKeyHash, dataPayload.reportKeyRevealed]).data;
       console.log('\nGot the data payload ' + payloadData);
     }
-
 
     //make raw transaction, hard code smart contract address for now 6/23/2018
     //from = funding ethereum Address
     //to = contract address (old contract: 0x693e3857aa48BB2902FD12F724DC095622e61AfC)
-    //new contract = TBD 9/29/2018
+    //new rinkeby contract v2 10.15.18 = 0x9Cb113605b9d72929dCf025274cF003239de3604
     let rawTx = {
       from: '0xe2f54E82B8E413537B95e739C2e80d99dE40C67B',
-      to: '0x693e3857aa48BB2902FD12F724DC095622e61AfC',
+      to: '0x9Cb113605b9d72929dCf025274cF003239de3604',
       nonce: await this.getNonce(this.signer.getAddress(), blockchain),
       gasPrice: await this.getGasPrice(blockchain),
       value: "0x00",

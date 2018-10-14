@@ -59,20 +59,8 @@ class MakeHistoricalReportHandler {
       cb({ code: 400, message: "time category parameter missing" });
       return;
     }
-    if (!body.earliestTimestamp) {
-      cb({ code: 400, message: "earliest timestamp parameter missing" });
-      return;
-    }
-    if (!body.lastestTimestamp) {
-      cb({ code: 400, message: "latest timestamp parameter missing" });
-      return;
-    }
-    if (!body.firstReportId) {
-      cb({ code: 400, message: "frist report id parameter missing" });
-      return;
-    }
-    if (!body.lastReportId) {
-      cb({ code: 400, message: "last report id parameter missing" });
+    if (!body.reportUrl) {
+      cb({ code: 400, message: "report Url hash parameter missing" });
       return;
     }
     if (!body.reportKeyHash) {
@@ -98,10 +86,7 @@ class MakeHistoricalReportHandler {
       rawTx = await this.ethereumMgr.makeTx({
         reports: body.reports,
         timeCategory: body.timeCategory,
-        earliestTimestamp: body.earliesTimestamp,
-        latestTimestamp: body.latestTimestamp,
-        firstId: body.firstId,
-        lastId:body.lastId,
+        reportUrl: body.reportUrl,
         reportKeyHash: body.reportKeyHash,
         reportKeyRevealed: body.reportKeyRevealed,
         blockchain: body.blockchain.toLowerCase(),
