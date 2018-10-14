@@ -165,7 +165,8 @@ class EthereumMgr {
   //makes transaction body to be signed by the sensui service
   async makeTx(dataPayload) {
     //error checks
-    if (dataPayload.methodName !== "makeHistoricalReport" || dataPayload.methodName !== "makeReport") {
+    if (dataPayload.methodName !== "makeHistoricalReport" && dataPayload.methodName !== "makeReport") {
+      console.log(dataPayload.methodName);
       throw "incorrect methodname being called";
     }
 
