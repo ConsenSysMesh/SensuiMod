@@ -86,7 +86,7 @@ at the top of the file):
 Purpose: this activates the handle method in handlers/makeHistoricalReport.js, which verifies creates meta transaction, signs it, and send it to the smart contract function to be committed to the blockchain. The function also pays for the transaction (for groups of report data that have occurred in the past)
 */
 module.exports.makeHistoricalReport = (event, context, callback) => {
-  preHandler(makeReportHandler, event, context, callback);
+  preHandler(makeHistoricalReportHandler, event, context, callback);
 };
 
 /*
@@ -137,6 +137,11 @@ const doHandler = (handler, event, context, callback) => {
     if (err == null) {
       response = {
         statusCode: 200,
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Credentials": true,
+          "Access-Control-Allow-Methods": "GET,HEAD,OPTIONS,POST,PUT"
+        },
         body: JSON.stringify({
           status: "success",
           data: resp
