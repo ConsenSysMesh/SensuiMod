@@ -185,10 +185,12 @@ class EthereumMgr {
 
     //create data payload for raw transaction
     var payloadData;
+    var reportHash = sha256(dataPayload.report);
+    var reportKeyHash = sha256(dataPayload.reportKeyHash);
     if (dataPayload.methodName === "makeReport") {
-      var payloadData = functionDef.toPayload([sha256(dataPayload.report), dataPayload.timestamp, dataPayload.reportType, dataPayload.reportUserId, dataPayload.reportUrl, dataPayload.reportKeyHash, dataPayload.reportKeyRevealed]).data;
+      payloadData = functionDef.toPayload([reportHash, dataPayload.timestamp, dataPayload.reportType, dataPayload.reportUserId, dataPayload.reportUrl, reportKeyHash, dataPayload.reportKeyRevealed]).data;
     } else if (dataPayload.methodName === "makeHistoricalReport") {
-      var payloadData = functionDef.toPayload([sha256(dataPayload.report), dataPayload.timeCategory, dataPayload.reportUrl, dataPayload.reportKeyHash, dataPayload.reportKeyRevealed]).data;
+      payloadData = functionDef.toPayload([reportHash, dataPayload.timeCategory, dataPayload.reportUrl, reportKeyHash, dataPayload.reportKeyRevealed]).data;
       console.log('\nGot the data payload ' + payloadData);
     }
 
@@ -197,10 +199,10 @@ class EthereumMgr {
     //to = contract address (old contract: 0x693e3857aa48BB2902FD12F724DC095622e61AfC)
     //new rinkeby contract v2 10.15.18 = 0x9Cb113605b9d72929dCf025274cF003239de3604
     let rawTx = {
-      from: '0xe2f54E82B8E413537B95e739C2e80d99dE40C67B',
+      from: '0xEe0ab9C28df4ccB55f33BFc7968c56535cE5fD36',
       to: '0x9Cb113605b9d72929dCf025274cF003239de3604',
-      nonce: await this.getNonce(this.signer.getAddress(), blockchain),
-      gasPrice: await this.getGasPrice(blockchain),
+      nonce: await this.getNonce(this.signer.getAddress(), dataPayload.blockchain),
+      gasPrice: await this.getGasPrice(dataPayload.blockchain),
       value: "0x00",
       data: payloadData,
     };
@@ -209,7 +211,7 @@ class EthereumMgr {
     const estimatedGas = await this.estimateGas(
       tx,
       this.signer.getAddress(),
-      blockchain
+      dataPayload.blockchain
     );
     // add some buffer to the limit
     tx.gasLimit = estimatedGas + 1000;
@@ -351,27 +353,20 @@ class EthereumMgr {
       connectionString: this.pgUrl
     });
 
-    //check if the transaction has actually completed
-    let txReceipt = this.getTransactionReceipt(txHash, networkName);
-
-    if (txReceipt.status) {
-      try {
-        await client.connect();
-        const res = await client.query(
-          "INSERT INTO tx(tx_hash, network,tx_options) \
-               VALUES ($1,$2,$3) ",
-          [txHash, networkName, txObj]
-        );
-      } catch (e) {
-        throw e;
-      } finally {
-        await client.end();
-      }
-    } else {
-      throw 'no transaction receipt available';
+    try {
+      await client.connect();
+      const res = await client.query(
+        "INSERT INTO tx(tx_hash, network,tx_options) \
+             VALUES ($1,$2,$3) ",
+        [txHash, networkName, txObj]
+      );
+    } catch (e) {
+      throw e;
+    } finally {
+      await client.end();
     }
-
   }
+
 
   async getTransactionReceipt(txHash, networkName) {
     if (!txHash) throw "no txHash";

@@ -3,23 +3,50 @@
 		"constant": false,
 		"inputs": [
 			{
-				"name": "report",
+				"name": "_reportsHash",
+				"type": "bytes32"
+			},
+			{
+				"name": "_timecategory",
 				"type": "string"
 			},
 			{
-				"name": "timestamp",
-				"type": "uint32"
+				"name": "_reportURL",
+				"type": "string"
 			},
 			{
-				"name": "latitude",
-				"type": "uint8"
+				"name": "_reportKeyHash",
+				"type": "bytes32"
 			},
 			{
-				"name": "longitude",
-				"type": "uint8"
+				"name": "_reportKeyRevealed",
+				"type": "string"
 			}
 		],
-		"name": "makeReport",
+		"name": "makeHistoricalReport",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "_reportHash",
+				"type": "bytes32"
+			},
+			{
+				"name": "_reportKey",
+				"type": "string"
+			}
+		],
+		"name": "revealHistoryReportKey",
 		"outputs": [
 			{
 				"name": "",
@@ -40,12 +67,154 @@
 			},
 			{
 				"indexed": false,
+				"name": "_inquirer",
+				"type": "address"
+			}
+		],
+		"name": "GetReport",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "_reportsHash",
+				"type": "bytes32"
+			},
+			{
+				"indexed": false,
+				"name": "_timeCategory",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"name": "_reportUrl",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"name": "_reportKeyHash",
+				"type": "bytes32"
+			}
+		],
+		"name": "HistoricalReportMade",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "_reportHash",
+				"type": "bytes32"
+			},
+			{
+				"indexed": false,
 				"name": "_reportTimestamp",
-				"type": "uint32"
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"name": "_reportType",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"name": "_reportUrl",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"name": "_reportKeyHash",
+				"type": "bytes32"
 			}
 		],
 		"name": "ReportMade",
 		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": false,
+				"name": "_reportKey",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"name": "_revealer",
+				"type": "address"
+			}
+		],
+		"name": "RevealKey",
+		"type": "event"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "_reportHash",
+				"type": "bytes32"
+			},
+			{
+				"name": "_timestamp",
+				"type": "uint256"
+			},
+			{
+				"name": "_type",
+				"type": "string"
+			},
+			{
+				"name": "_userId",
+				"type": "uint256"
+			},
+			{
+				"name": "_reportUrl",
+				"type": "string"
+			},
+			{
+				"name": "_reportKeyHash",
+				"type": "bytes32"
+			},
+			{
+				"name": "_reportKeyRevealed",
+				"type": "string"
+			}
+		],
+		"name": "makeReport",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"constant": false,
+		"inputs": [
+			{
+				"name": "_reportHash",
+				"type": "bytes32"
+			},
+			{
+				"name": "_reportKey",
+				"type": "string"
+			}
+		],
+		"name": "revealReportKey",
+		"outputs": [
+			{
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "nonpayable",
+		"type": "function"
 	},
 	{
 		"constant": false,
@@ -74,8 +243,102 @@
 	},
 	{
 		"constant": true,
+		"inputs": [
+			{
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"name": "historicalReports",
+		"outputs": [
+			{
+				"name": "reportHash",
+				"type": "bytes32"
+			},
+			{
+				"name": "timeCategory",
+				"type": "string"
+			},
+			{
+				"name": "reportNum",
+				"type": "uint256"
+			},
+			{
+				"name": "reportURL",
+				"type": "string"
+			},
+			{
+				"name": "reportKeyHash",
+				"type": "bytes32"
+			},
+			{
+				"name": "reportKeyRevealed",
+				"type": "string"
+			},
+			{
+				"name": "exists",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
+		"inputs": [
+			{
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"name": "incomingReports",
+		"outputs": [
+			{
+				"name": "reportHash",
+				"type": "bytes32"
+			},
+			{
+				"name": "reportTimestamp",
+				"type": "uint256"
+			},
+			{
+				"name": "reportType",
+				"type": "string"
+			},
+			{
+				"name": "reportUserId",
+				"type": "uint256"
+			},
+			{
+				"name": "reportNum",
+				"type": "uint256"
+			},
+			{
+				"name": "reportURL",
+				"type": "string"
+			},
+			{
+				"name": "reportKeyHash",
+				"type": "bytes32"
+			},
+			{
+				"name": "reportKeyRevealed",
+				"type": "string"
+			},
+			{
+				"name": "exists",
+				"type": "bool"
+			}
+		],
+		"payable": false,
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"constant": true,
 		"inputs": [],
-		"name": "getNumReports",
+		"name": "numCurrentReports",
 		"outputs": [
 			{
 				"name": "",
@@ -89,7 +352,7 @@
 	{
 		"constant": true,
 		"inputs": [],
-		"name": "numReports",
+		"name": "numHistoricalReports",
 		"outputs": [
 			{
 				"name": "",
@@ -108,37 +371,6 @@
 			{
 				"name": "",
 				"type": "address"
-			}
-		],
-		"payable": false,
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"constant": true,
-		"inputs": [
-			{
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "reports",
-		"outputs": [
-			{
-				"name": "reportHash",
-				"type": "bytes32"
-			},
-			{
-				"name": "reportTimestamp",
-				"type": "uint32"
-			},
-			{
-				"name": "lat",
-				"type": "uint8"
-			},
-			{
-				"name": "lng",
-				"type": "uint8"
 			}
 		],
 		"payable": false,

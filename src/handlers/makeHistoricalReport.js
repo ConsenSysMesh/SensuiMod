@@ -51,7 +51,7 @@ class MakeHistoricalReportHandler {
     }
 
     /* checking for inputs */
-    if (!body.reports) {
+    if (!body.report) {
       cb({ code: 400, message: "report parameter missing" });
       return;
     }
@@ -84,7 +84,7 @@ class MakeHistoricalReportHandler {
     let rawTx;
     try {
       rawTx = await this.ethereumMgr.makeTx({
-        reports: body.reports,
+        report: body.report,
         timeCategory: body.timeCategory,
         reportUrl: body.reportUrl,
         reportKeyHash: body.reportKeyHash,
