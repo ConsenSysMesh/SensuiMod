@@ -198,9 +198,11 @@ class EthereumMgr {
     //from = funding ethereum Address
     //to = contract address (old contract: 0x693e3857aa48BB2902FD12F724DC095622e61AfC)
     //new rinkeby contract v2 10.15.18 = 0x9Cb113605b9d72929dCf025274cF003239de3604
+    //new rinkeby contract v3 10.15.18 = 0x27F0e2167b0E848807C6bDf9F0316e23f9e9d07f
+    //new rinkeby contract v5 10.15.18 = 0x27eFA5106a30FFeBf10fe84852D3aef48A44ec94
     let rawTx = {
       from: '0xEe0ab9C28df4ccB55f33BFc7968c56535cE5fD36',
-      to: '0x9Cb113605b9d72929dCf025274cF003239de3604',
+      to: '0x27eFA5106a30FFeBf10fe84852D3aef48A44ec94',
       nonce: await this.getNonce(this.signer.getAddress(), dataPayload.blockchain),
       gasPrice: await this.getGasPrice(dataPayload.blockchain),
       value: "0x00",
