@@ -219,22 +219,36 @@ Authorization: Bearer <jwt token>
 }
 ```
 
-## Example of Customized Endpoints (Immutable Evidence)
+# Example of Customized Endpoints (Immutable Evidence)
 An example of using customizable endpoints with the sensuiMod build is included in the repository. The two unique smart contract based endpoints are (1) /MakeReport and (2) /MakeHistoricalReport. MakeReport allows you to submit the SHA256 hash of a particular data set onchain into a mapping for immutable store and reference, and MakeHistoricalReport allows you to submit the SHA256 hash of a span of datasets (all concatenated together) for more scalable immutable store and reference. Here are the data attributes required within each call: 
 
-#### MakeReport 
-  - report; //stringified json of event data
+## MakeReport 
+
+### MakeReport Endpoint Parameters
+  - report; //stringified json of event data or hash of report data
   - uint32 reportTimestamp; //timestamp of event data
   - string reportType; //type of event (iot, human reported, etc)
   - uint32 reportUserId; //id of iot device of user that reported event
+  - string reportKeyHash; //KECKACK256 of report's encryption key
+  - string reportKeyRevealed; //when smart contract owner reveals the encryption key for a particular event
+  - string reportUrl //IPFS URL that carries event's metadata (which can be encrypted)
+  - string blockchain //blockchain name of network on ethereum 
+  
+### MakeReport Functions 
+TBD
 
-#### MakeHistoricalReport 
+## MakeHistoricalReport 
+
+### MakeHistoricalReport Endpoint Parameters 
   - string reports, //stringified json of all historical event data concatenated together in a certain period (week, month..)
   - string timecategory, //time period of data set (week of reports, month of reports etc)
-  - uint256 earliestTimestamp, //earliest timestamp of report in batch 
-  - uint256 lastestTimestamp, //latest timestamp of report in batch 
-  - uint256 firstId, //first databse id of report in batch
-  - uint256 lastId //last databse id of report in batch
+  - string reportKeyHash; //KECKACK256 of report's encryption key
+  - string reportKeyRevealed; //when smart contract owner reveals the encryption key for a particular event
+  - string reportUrl //IPFS URL that carries event's metadata (which can be encrypted)
+  - string blockchain //blockchain name of network on ethereum 
+
+### MakeHistoricalReport Functions
+TBD
   
   
 To test the endpoints, please set up the service with AWS lambda, deploy it, and then use postman. Follow these instructions to get postman to submit the POST requests: 
